@@ -55,6 +55,7 @@ class MainWindow(QMainWindow):
         self.ui.btn_seuillage.clicked.connect(self.seuillage)
         self.ui.btn_reset.clicked.connect(self.reset)
         self.ui.btn_quitte.clicked.connect(self.quitte)
+        self.ui.actionenregistrer_sous.triggered.connect(self.enregistre)
 
     #Ouvrir une image
     def importImage(self):
@@ -205,6 +206,13 @@ class MainWindow(QMainWindow):
         self.ui.label.setGeometry(30,30,self.img_array.shape[1], self.img_array.shape[0])
         self.ui.label.setPixmap(QPixmap(qimg))
         self.ui.label.setScaledContents(True)
+
+    #enregistre
+    def enregistre(self):
+        # pas encore au point
+        fileName= QFileDialog.getSaveFileName(
+            self, "Save Image", "", "All Files (*)"
+        )
 
     #quitter
     def quitte(self):
