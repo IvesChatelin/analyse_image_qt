@@ -128,6 +128,26 @@ class MainWindow(QMainWindow):
             fileName = QFileDialog.getOpenFileName(self)
             img = Image.open(fileName[0])
             img_array2 = np.array(img)
+
+            #composante de l'image 1
+            img1_red = self.img_array[:,:,0]
+            img1_green = self.img_array[:,:,1]
+            img1_blue = self.img_array[:,:,2]
+            #composante de l'image 2
+            img2_red = img_array2[:,:,0]
+            img2_green = img_array2[:,:,1]
+            img2_blue = img_array2[:,:,2]
+
+            som_red = img1_red + img2_red
+            som_green = img1_green + img2_green
+            som_blue = img1_blue + img2_blue
+
+            img_add = np.dstack((som_red,som_green,som_blue))
+            img = Image.fromarray(img_add)
+            qimg = ImageQt.ImageQt(img)
+            self.ui.label.setGeometry(30,30,img_add.shape[1], img_add.shape[0])
+            self.ui.label.setPixmap(QPixmap(qimg))
+            self.ui.label.setScaledContents(True)
             self.window = Window(fileName[0], img_array2.shape[1], img_array2.shape[0])
             self.window.show()
             print("addition")
