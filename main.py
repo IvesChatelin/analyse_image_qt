@@ -221,12 +221,12 @@ class MainWindow(QMainWindow):
                               [0,255,0],
                               [255,0,255]])
 
-            for i in range(1, img_ero.shape[0]-1):
-                for j in range(1, img_ero.shape[1]-1):
+            for i in range(1, self.img_bin.shape[0]-1):
+                for j in range(1, self.img_bin.shape[1]-1):
                     som = 0
                     for t in range(-1, struc.shape[0]-1):
                         for k in range(-1, struc.shape[1]-1):
-                            som += img_ero[i+t, j+k]
+                            som += self.img_bin[i+t, j+k]
                     if som == struc.sum():
                         img_ero[i,j] = 255
                     else:
@@ -252,12 +252,12 @@ class MainWindow(QMainWindow):
                               [0,255,0],
                               [255,0,255]])
 
-            for i in range(1, img_dilat.shape[0]-1):
-                for j in range(1, img_dilat.shape[1]-1):
+            for i in range(1, self.img_bin.shape[0]-1):
+                for j in range(1, self.img_bin.shape[1]-1):
                     som = 0
                     for t in range(-1, struc.shape[0]-1):
                         for k in range(-1, struc.shape[0]-1):
-                            som += img_dilat[i+t, j+k]
+                            som += self.img_bin[i+t, j+k]
                     if som != 0:
                         img_dilat[i,j] = 255
                     else:
@@ -285,12 +285,12 @@ class MainWindow(QMainWindow):
                               [0,255,0],
                               [255,0,255]])
 
-            for i in range(1, img_ero.shape[0]-1):
-                for j in range(1, img_ero.shape[1]-1):
+            for i in range(1, self.img_bin.shape[0]-1):
+                for j in range(1, self.img_bin.shape[1]-1):
                     som = 0
                     for t in range(-1, struc.shape[0]-1):
                         for k in range(-1, struc.shape[1]-1):
-                            som += img_ero[i+t, j+k]
+                            som += self.img_bin[i+t, j+k]
                     if som == struc.sum():
                         img_ero[i,j] = 255
                     else:
@@ -303,12 +303,12 @@ class MainWindow(QMainWindow):
                               [0,255,0],
                               [255,0,255]])
 
-            for i in range(1, img_dilat.shape[0]-1):
-                for j in range(1, img_dilat.shape[1]-1):
+            for i in range(1, img_ero.shape[0]-1):
+                for j in range(1, img_ero.shape[1]-1):
                     som = 0
                     for t in range(-1, struc.shape[0]-1):
                         for k in range(-1, struc.shape[0]-1):
-                            som += img_dilat[i+t, j+k]
+                            som += img_ero[i+t, j+k]
                     if som != 0:
                         img_dilat[i,j] = 255
                     else:
@@ -336,12 +336,12 @@ class MainWindow(QMainWindow):
                               [0,255,0],
                               [255,0,255]])
 
-            for i in range(1, img_dilat.shape[0]-1):
-                for j in range(1, img_dilat.shape[1]-1):
+            for i in range(1, self.img_bin.shape[0]-1):
+                for j in range(1, self.img_bin.shape[1]-1):
                     som = 0
                     for t in range(-1, struc.shape[0]-1):
                         for k in range(-1, struc.shape[0]-1):
-                            som += img_dilat[i+t, j+k]
+                            som += self.img_bin[i+t, j+k]
                     if som != 0:
                         img_dilat[i,j] = 255
                     else:
@@ -349,12 +349,12 @@ class MainWindow(QMainWindow):
 
             #erosion
             img_ero = np.array(img_dilat)
-            for i in range(1, img_ero.shape[0]-1):
-                for j in range(1, img_ero.shape[1]-1):
+            for i in range(1, img_dilat.shape[0]-1):
+                for j in range(1, img_dilat.shape[1]-1):
                     som = 0
                     for t in range(-1, struc.shape[0]-1):
                         for k in range(-1, struc.shape[1]-1):
-                            som += img_ero[i+t, j+k]
+                            som += img_dilat[i+t, j+k]
                     if som == struc.sum():
                         img_ero[i,j] = 255
                     else:
