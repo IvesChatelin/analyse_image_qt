@@ -56,6 +56,10 @@ class MainWindow(QMainWindow):
         self.ui.btn_reset.clicked.connect(self.reset)
         self.ui.btn_quitte.clicked.connect(self.quitte)
         self.ui.actionenregistrer_sous.triggered.connect(self.enregistre)
+        self.ui.btn_erosion.clicked.connect(self.erosion)
+        self.ui.btn_dilatation.clicked.connect(self.dilatation)
+        self.ui.btn_ouverture.clicked.connect(self.ouverture)
+        self.ui.btn_fermeture.clicked.connect(self.fermeture)
 
     #Ouvrir une image
     def importImage(self):
@@ -70,6 +74,7 @@ class MainWindow(QMainWindow):
             print("ok")
         else:
             self.img_gray_level = []
+            self.img_bin = []
             self.ui.label.setGeometry(30,30,self.img_array.shape[1], self.img_array.shape[0])
             self.ui.label.setPixmap(QPixmap(fileName[0]))
             self.ui.label.setScaledContents(True)
@@ -103,21 +108,22 @@ class MainWindow(QMainWindow):
             msg.setText("vous devez mettre l'image en niveau de gray")
             msg.show()
         else:
-            seuil = self.img_gray_level.mean()
-            for i in range(self.img_gray_level.shape[0]):
-                for j in range(self.img_gray_level.shape[1]):
-                    if (self.img_gray_level[i,j] < seuil):
-                        self.img_gray_level[i,j] = 255
+            self.img_bin = np.array(self.img_gray_level)
+            seuil = self.img_bin.mean()
+            for i in range(self.img_bin.shape[0]):
+                for j in range(self.img_bin.shape[1]):
+                    if (self.img_bin[i,j] < seuil):
+                        self.img_bin[i,j] = 255
                     else:
-                        self.img_gray_level[i,j] = 0
-            img = Image.fromarray(self.img_gray_level)
+                        self.img_bin[i,j] = 0
+            img = Image.fromarray(self.img_bin)
             qimg = ImageQt.ImageQt(img)
-            self.ui.label.setGeometry(30,30,self.img_gray_level.shape[1], self.img_gray_level.shape[0])
+            self.ui.label.setGeometry(30,30,self.img_bin.shape[1], self.img_bin.shape[0])
             self.ui.label.setPixmap(QPixmap(qimg))
             self.ui.label.setScaledContents(True)
             #histogramme
             ht = grapheHisto(width=6, height=5, dpi=100)
-            ht.axes.hist(self.img_gray_level)
+            ht.axes.hist(self.img_bin)
             ht.show()
 
     #addition de deux images
@@ -141,6 +147,7 @@ class MainWindow(QMainWindow):
                 img1_red = self.img_array[:,:,0]
                 img1_green = self.img_array[:,:,1]
                 img1_blue = self.img_array[:,:,2]
+
                 #composante de l'image 2
                 img2_red = img_array2[:,:,0]
                 img2_green = img_array2[:,:,1]
@@ -153,6 +160,7 @@ class MainWindow(QMainWindow):
                 img_add = np.dstack((som_red,som_green,som_blue))
                 img = Image.fromarray(img_add)
                 qimg = ImageQt.ImageQt(img)
+
                 self.ui.label.setGeometry(30,30,img_add.shape[1], img_add.shape[0])
                 self.ui.label.setPixmap(QPixmap(qimg))
                 self.ui.label.setScaledContents(True)
@@ -198,9 +206,170 @@ class MainWindow(QMainWindow):
                 self.window = Window(fileName[0], img_array2.shape[1], img_array2.shape[0])
                 self.window.show()
 
+    #Erosion
+    def erosion(self):
+        if len(self.img_bin) == 0:
+            msg = QMessageBox(self)
+            msg.setWindowTitle("image error")
+            msg.setText("vous devez d'abord effectuer un seuillage")
+            msg.show()
+        else:
+            img_ero = np.array(self.img_bin)
+
+            # element structurant à 8 connexité
+            struc = np.array([[255,0,255],
+                              [0,255,0],
+                              [255,0,255]])
+
+            for i in range(1, img_ero.shape[0]-1):
+                for j in range(1, img_ero.shape[1]-1):
+                    som = 0
+                    for t in range(-1, struc.shape[0]-1):
+                        for k in range(-1, struc.shape[1]-1):
+                            som += img_ero[i+t, j+k]
+                    if som == struc.sum():
+                        img_ero[i,j] = 255
+                    else:
+                        img_ero[i,j] = 0
+
+            img = Image.fromarray(img_ero)
+            qimg = ImageQt.ImageQt(img)
+            self.ui.label.setGeometry(30,30,img_ero.shape[1], img_ero.shape[0])
+            self.ui.label.setPixmap(QPixmap(qimg))
+            self.ui.label.setScaledContents(True)
+
+    #dilatation
+    def dilatation(self):
+        if len(self.img_bin) == 0:
+            msg = QMessageBox(self)
+            msg.setWindowTitle("image error")
+            msg.setText("vous devez d'abord effectuer un seuillage")
+            msg.show()
+        else:
+            img_dilat = np.array(self.img_bin)
+            # element structurant à 8 connexité
+            struc = np.array([[255,0,255],
+                              [0,255,0],
+                              [255,0,255]])
+
+            for i in range(1, img_dilat.shape[0]-1):
+                for j in range(1, img_dilat.shape[1]-1):
+                    som = 0
+                    for t in range(-1, struc.shape[0]-1):
+                        for k in range(-1, struc.shape[0]-1):
+                            som += img_dilat[i+t, j+k]
+                    if som != 0:
+                        img_dilat[i,j] = 255
+                    else:
+                        img_dilat[i,j] = 0
+
+            img = Image.fromarray(img_dilat)
+            qimg = ImageQt.ImageQt(img)
+            self.ui.label.setGeometry(30,30,img_dilat.shape[1], img_dilat.shape[0])
+            self.ui.label.setPixmap(QPixmap(qimg))
+            self.ui.label.setScaledContents(True)
+
+    #ouverture
+    def ouverture(self):
+        if len(self.img_bin) == 0:
+            msg = QMessageBox(self)
+            msg.setWindowTitle("image error")
+            msg.setText("vous devez d'abord effectuer un seuillage")
+            msg.show()
+        else:
+            #erosion
+            img_ero = np.array(self.img_bin)
+
+            # element structurant à 8 connexité
+            struc = np.array([[255,0,255],
+                              [0,255,0],
+                              [255,0,255]])
+
+            for i in range(1, img_ero.shape[0]-1):
+                for j in range(1, img_ero.shape[1]-1):
+                    som = 0
+                    for t in range(-1, struc.shape[0]-1):
+                        for k in range(-1, struc.shape[1]-1):
+                            som += img_ero[i+t, j+k]
+                    if som == struc.sum():
+                        img_ero[i,j] = 255
+                    else:
+                        img_ero[i,j] = 0
+
+            #dilation de l'erodé
+            img_dilat = np.array(img_ero)
+            # element structurant symetrique à 8 connexité
+            struc = np.array([[255,0,255],
+                              [0,255,0],
+                              [255,0,255]])
+
+            for i in range(1, img_dilat.shape[0]-1):
+                for j in range(1, img_dilat.shape[1]-1):
+                    som = 0
+                    for t in range(-1, struc.shape[0]-1):
+                        for k in range(-1, struc.shape[0]-1):
+                            som += img_dilat[i+t, j+k]
+                    if som != 0:
+                        img_dilat[i,j] = 255
+                    else:
+                        img_dilat[i,j] = 0
+
+            img = Image.fromarray(img_dilat)
+            qimg = ImageQt.ImageQt(img)
+            self.ui.label.setGeometry(30,30,img_dilat.shape[1], img_dilat.shape[0])
+            self.ui.label.setPixmap(QPixmap(qimg))
+            self.ui.label.setScaledContents(True)
+
+
+    #fermeture
+    def fermeture(self):
+        if len(self.img_bin) == 0:
+            msg = QMessageBox(self)
+            msg.setWindowTitle("image error")
+            msg.setText("vous devez d'abord effectuer un seuillage")
+            msg.show()
+        else:
+            #dilatation
+            img_dilat = np.array(self.img_bin)
+            # element structurant symetrique à 8 connexité
+            struc = np.array([[255,0,255],
+                              [0,255,0],
+                              [255,0,255]])
+
+            for i in range(1, img_dilat.shape[0]-1):
+                for j in range(1, img_dilat.shape[1]-1):
+                    som = 0
+                    for t in range(-1, struc.shape[0]-1):
+                        for k in range(-1, struc.shape[0]-1):
+                            som += img_dilat[i+t, j+k]
+                    if som != 0:
+                        img_dilat[i,j] = 255
+                    else:
+                        img_dilat[i,j] = 0
+
+            #erosion
+            img_ero = np.array(img_dilat)
+            for i in range(1, img_ero.shape[0]-1):
+                for j in range(1, img_ero.shape[1]-1):
+                    som = 0
+                    for t in range(-1, struc.shape[0]-1):
+                        for k in range(-1, struc.shape[1]-1):
+                            som += img_ero[i+t, j+k]
+                    if som == struc.sum():
+                        img_ero[i,j] = 255
+                    else:
+                        img_ero[i,j] = 0
+
+            img = Image.fromarray(img_ero)
+            qimg = ImageQt.ImageQt(img)
+            self.ui.label.setGeometry(30,30,img_ero.shape[1], img_ero.shape[0])
+            self.ui.label.setPixmap(QPixmap(qimg))
+            self.ui.label.setScaledContents(True)
+
     #reset
     def reset(self):
         self.img_gray_level = []
+        self.img_bin = []
         img = Image.fromarray(self.img_array)
         qimg = ImageQt.ImageQt(img)
         self.ui.label.setGeometry(30,30,self.img_array.shape[1], self.img_array.shape[0])
