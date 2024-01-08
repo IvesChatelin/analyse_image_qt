@@ -60,6 +60,9 @@ class MainWindow(QMainWindow):
         self.ui.btn_dilatation.clicked.connect(self.dilatation)
         self.ui.btn_ouverture.clicked.connect(self.ouverture)
         self.ui.btn_fermeture.clicked.connect(self.fermeture)
+        self.ui.btn_amin.clicked.connect(self.amincissement)
+        self.ui.btn_epai.clicked.connect(self.epaississement)
+        self.ui.btn_squelette.clicked.connect(self.squelette)
 
     #Ouvrir une image
     def importImage(self):
@@ -363,6 +366,104 @@ class MainWindow(QMainWindow):
             img = Image.fromarray(img_ero)
             qimg = ImageQt.ImageQt(img)
             self.ui.label.setGeometry(30,30,img_ero.shape[1], img_ero.shape[0])
+            self.ui.label.setPixmap(QPixmap(qimg))
+            self.ui.label.setScaledContents(True)
+
+    #amincissement
+    def amincissement(self):
+        if len(self.img_bin) == 0:
+            msg = QMessageBox(self)
+            msg.setWindowTitle("image error")
+            msg.setText("vous devez d'abord effectuer un seuillage")
+            msg.show()
+        else:
+            img_aminc = np.array(self.img_bin)
+            config = np.array([[255,0,255],
+                              [0,255,0],
+                              [255,0,255]])
+
+            for i in range(1, self.img_bin.shape[0]-1):
+                for j in range(1, self.img_bin.shape[1]-1):
+                    bool = False
+                    for t in range(-1, config.shape[0]-1):
+                        for k in range(-1, config.shape[1]-1):
+                            if self.img_bin[i+t, j+k] == config[t,k]:
+                                bool = True
+                            else:
+                                bool = False
+                    if bool :
+                        img_aminc[i,j] = 0
+
+            img = Image.fromarray(img_aminc)
+            qimg = ImageQt.ImageQt(img)
+            self.ui.label.setGeometry(30,30,img_aminc.shape[1], img_aminc.shape[0])
+            self.ui.label.setPixmap(QPixmap(qimg))
+            self.ui.label.setScaledContents(True)
+
+    #epaississement
+    def epaississement(self):
+        if len(self.img_bin) == 0:
+            msg = QMessageBox(self)
+            msg.setWindowTitle("image error")
+            msg.setText("vous devez d'abord effectuer un seuillage")
+            msg.show()
+        else:
+            img_aminc = np.array(self.img_bin)
+            config = np.array([[255,0,255],
+                              [0,255,0],
+                              [255,0,255]])
+
+            for i in range(1, self.img_bin.shape[0]-1):
+                for j in range(1, self.img_bin.shape[1]-1):
+                    bool = False
+                    for t in range(-1, config.shape[0]-1):
+                        for k in range(-1, config.shape[1]-1):
+                            if self.img_bin[i+t, j+k] == config[t,k]:
+                                bool = True
+                            else:
+                                bool = False
+                    if bool :
+                        img_aminc[i,j] = 255
+
+            img = Image.fromarray(img_aminc)
+            qimg = ImageQt.ImageQt(img)
+            self.ui.label.setGeometry(30,30,img_aminc.shape[1], img_aminc.shape[0])
+            self.ui.label.setPixmap(QPixmap(qimg))
+            self.ui.label.setScaledContents(True)
+
+    #spuelette
+    def squelette(self):
+        if len(self.img_bin) == 0:
+            msg = QMessageBox(self)
+            msg.setWindowTitle("image error")
+            msg.setText("vous devez d'abord effectuer un seuillage")
+            msg.show()
+        else:
+            img_sqlt = np.array(self.img_bin)
+            h = 3
+            l = 3
+            taille_boule = h * l
+            while h < self.img_bin.shape[0]-2 and l < self.img_bin.shape[1]-2:
+                for i in range(1, self.img_bin.shape[0]-1):
+                    for j in range(1, self.img_bin.shape[1]-1):
+                        som = 0
+                        frontiere = 0
+                        for t in range(-1, h-1):
+                            for k in range(-1, l-1):
+                                if (i+t == 0 or j+k == 0) or (i+t == 1 or j+k == 1):
+                                    frontiere += 1
+                                som += self.img_bin[i+t, j+k]
+                        if frontiere >= 2:
+                            if som == taille_boule*255:
+                                img_sqlt[i,j] = 255
+                                for t in range(-1, l-1):
+                                    for k in range(-1, h-1):
+                                        img_sqlt[i+t, j+k] = 0
+                h += 1
+                l += 1
+            img = Image.fromarray(img_sqlt)
+            qimg = ImageQt.ImageQt(img)
+            self.ui.label.setGeometry(30,30,img_sqlt.shape[1], img_sqlt.shape[0])
             self.ui.label.setPixmap(QPixmap(qimg))
             self.ui.label.setScaledContents(True)
 
