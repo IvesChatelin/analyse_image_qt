@@ -63,6 +63,7 @@ class MainWindow(QMainWindow):
         self.ui.btn_amin.clicked.connect(self.amincissement)
         self.ui.btn_epai.clicked.connect(self.epaississement)
         self.ui.btn_squelette.clicked.connect(self.squelette)
+        self.ui.btn_amin_homtho.clicked.connect(self.amincissement_homotopique)
 
     #Ouvrir une image
     def importImage(self):
@@ -90,8 +91,11 @@ class MainWindow(QMainWindow):
             msg.setText("vous devez ouvrir une image")
             msg.show()
         else:
-            img_canal_red = self.img_array[:,:,0]
-            self.img_gray_level = np.array(img_canal_red)
+            if len(self.img_array.shape) >= 3:
+                img_canal_red = self.img_array[:,:,0]
+                self.img_gray_level = np.array(img_canal_red)
+            else:
+                self.img_gray_level = np.array(self.img_array)
             img = Image.fromarray(self.img_gray_level)
             qimg = ImageQt.ImageQt(img)
             self.ui.label.setGeometry(30,30,self.img_gray_level.shape[1], self.img_gray_level.shape[0])
@@ -224,8 +228,8 @@ class MainWindow(QMainWindow):
                               [0,255,0],
                               [255,0,255]])
 
-            for i in range(1, self.img_bin.shape[0]-1):
-                for j in range(1, self.img_bin.shape[1]-1):
+            for i in range(self.img_bin.shape[0]-1):
+                for j in range(self.img_bin.shape[1]-1):
                     som = 0
                     for t in range(-1, struc.shape[0]-1):
                         for k in range(-1, struc.shape[1]-1):
@@ -255,8 +259,8 @@ class MainWindow(QMainWindow):
                               [0,255,0],
                               [255,0,255]])
 
-            for i in range(1, self.img_bin.shape[0]-1):
-                for j in range(1, self.img_bin.shape[1]-1):
+            for i in range(self.img_bin.shape[0]-1):
+                for j in range(self.img_bin.shape[1]-1):
                     som = 0
                     for t in range(-1, struc.shape[0]-1):
                         for k in range(-1, struc.shape[0]-1):
@@ -288,8 +292,8 @@ class MainWindow(QMainWindow):
                               [0,255,0],
                               [255,0,255]])
 
-            for i in range(1, self.img_bin.shape[0]-1):
-                for j in range(1, self.img_bin.shape[1]-1):
+            for i in range(self.img_bin.shape[0]-1):
+                for j in range(self.img_bin.shape[1]-1):
                     som = 0
                     for t in range(-1, struc.shape[0]-1):
                         for k in range(-1, struc.shape[1]-1):
@@ -339,8 +343,8 @@ class MainWindow(QMainWindow):
                               [0,255,0],
                               [255,0,255]])
 
-            for i in range(1, self.img_bin.shape[0]-1):
-                for j in range(1, self.img_bin.shape[1]-1):
+            for i in range(self.img_bin.shape[0]-1):
+                for j in range(self.img_bin.shape[1]-1):
                     som = 0
                     for t in range(-1, struc.shape[0]-1):
                         for k in range(-1, struc.shape[0]-1):
@@ -378,16 +382,16 @@ class MainWindow(QMainWindow):
             msg.show()
         else:
             img_aminc = np.array(self.img_bin)
-            config = np.array([[255,0,255],
-                              [0,255,0],
-                              [255,0,255]])
+            config = np.array([[255,255,255],
+                                [None,255,None],
+                                [0,0,0]])
 
-            for i in range(1, self.img_bin.shape[0]-1):
-                for j in range(1, self.img_bin.shape[1]-1):
+            for i in range(self.img_bin.shape[0]-1):
+                for j in range(self.img_bin.shape[1]-1):
                     bool = False
                     for t in range(-1, config.shape[0]-1):
                         for k in range(-1, config.shape[1]-1):
-                            if self.img_bin[i+t, j+k] == config[t,k]:
+                            if config[t,k] == None or self.img_bin[i+t, j+k] == config[t,k]:
                                 bool = True
                             else:
                                 bool = False
@@ -409,16 +413,16 @@ class MainWindow(QMainWindow):
             msg.show()
         else:
             img_aminc = np.array(self.img_bin)
-            config = np.array([[255,0,255],
-                              [0,255,0],
-                              [255,0,255]])
+            config = np.array([[255,255,255],
+                              [None,255,None],
+                              [0,0,0]])
 
-            for i in range(1, self.img_bin.shape[0]-1):
-                for j in range(1, self.img_bin.shape[1]-1):
+            for i in range(self.img_bin.shape[0]-1):
+                for j in range(self.img_bin.shape[1]-1):
                     bool = False
                     for t in range(-1, config.shape[0]-1):
                         for k in range(-1, config.shape[1]-1):
-                            if self.img_bin[i+t, j+k] == config[t,k]:
+                            if config[t,k] == None or self.img_bin[i+t, j+k] == config[t,k]:
                                 bool = True
                             else:
                                 bool = False
@@ -439,31 +443,128 @@ class MainWindow(QMainWindow):
             msg.setText("vous devez d'abord effectuer un seuillage")
             msg.show()
         else:
-            img_sqlt = np.array(self.img_bin)
             h = 3
             l = 3
-            taille_boule = h * l
-            while h < self.img_bin.shape[0]-2 and l < self.img_bin.shape[1]-2:
-                for i in range(1, self.img_bin.shape[0]-1):
-                    for j in range(1, self.img_bin.shape[1]-1):
+            taille_boule1 = 3*3*255
+
+            img_sqlt = np.array(self.img_bin)
+            tmp_image = np.zeros_like(self.img_bin)
+
+            while (img_sqlt == tmp_image).all() == False:
+                tmp_image = np.array(img_sqlt)
+                taille_boule = h * l
+                #erosion
+                img_ero = np.array(img_sqlt)
+                for i in range(img_sqlt.shape[0]-1):
+                    for j in range(img_sqlt.shape[1]-1):
                         som = 0
-                        frontiere = 0
                         for t in range(-1, h-1):
                             for k in range(-1, l-1):
-                                if (i+t == 0 or j+k == 0) or (i+t == 1 or j+k == 1):
-                                    frontiere += 1
-                                som += self.img_bin[i+t, j+k]
-                        if frontiere >= 2:
-                            if som == taille_boule*255:
-                                img_sqlt[i,j] = 255
-                                for t in range(-1, l-1):
-                                    for k in range(-1, h-1):
-                                        img_sqlt[i+t, j+k] = 0
+                                if 0 <= i + t < img_sqlt.shape[0] and 0 <= j + k < img_sqlt.shape[1]:
+                                    som += img_sqlt[i+t, j+k]
+                        if som == taille_boule*255:
+                            img_ero[i,j] = 255
+                        else:
+                            img_ero[i,j] = 0
+
+                #ouverture
+                img_ero2 = np.array(img_ero)
+                for i in range(img_ero.shape[0]-1):
+                    for j in range(img_ero.shape[1]-1):
+                        som = 0
+                        for t in range(-1, 2):
+                            for k in range(-1, 2):
+                                if 0 <= i + t < img_ero.shape[0] and 0 <= j + k < img_ero.shape[1]:
+                                    som += img_ero[i+t, j+k]
+                        if som == taille_boule1:
+                            img_ero2[i,j] = 255
+                        else:
+                            img_ero2[i,j] = 0
+
+                #dilation de l'erodé
+                img_ouvert = np.array(img_ero2)
+                for i in range(img_ero2.shape[0]-1):
+                    for j in range(img_ero2.shape[1]-1):
+                        som = 0
+                        for t in range(-1, 2):
+                            for k in range(-1, 2):
+                                if 0 <= i + t < img_ero2.shape[0] and 0 <= j + k < img_ero2.shape[1]:
+                                    som += img_ero2[i+t, j+k]
+                        if som != 0:
+                            img_ouvert[i,j] = 255
+                        else:
+                            img_ouvert[i,j] = 0
+
+                img_sqlt += img_ero - img_ouvert
+
                 h += 1
                 l += 1
+
             img = Image.fromarray(img_sqlt)
             qimg = ImageQt.ImageQt(img)
             self.ui.label.setGeometry(30,30,img_sqlt.shape[1], img_sqlt.shape[0])
+            self.ui.label.setPixmap(QPixmap(qimg))
+            self.ui.label.setScaledContents(True)
+
+    #homoto
+    def amincissement_homotopique(self):
+        l1 = np.array([[255,255,255],
+                        [None,255,None],
+                        [0,0,0]])
+        l2 = np.array([[None,255,255],
+                        [0,255,255],
+                        [0,0,None]])
+        l3 = np.array([[0,None,255],
+                        [0,255,255],
+                        [0,None,255]])
+        l4 = np.array([[0,0,None],
+                        [0,255,255],
+                        [None,255,255]])
+        l5 = np.array([[0,0,0],
+                        [None,255,None],
+                        [255,255,255]])
+        l6 = np.array([[None,0,0],
+                        [255,255,0],
+                        [255,255,None]])
+        l7 = np.array([[255,None,0],
+                        [255,255,0],
+                        [255,None,0]])
+        l8 = np.array([[255,255,None],
+                        [255,255,0],
+                        [None,0,0]])
+        l = [l1,l2,l3,l4,l5,l6,l7,l8]
+        if len(self.img_bin) == 0:
+            msg = QMessageBox(self)
+            msg.setWindowTitle("image error")
+            msg.setText("vous devez d'abord effectuer un seuillage")
+            msg.show()
+        else:
+            it = self.ui.spinBox.value()
+            p = 0
+            img_aminc = np.array(self.img_bin)
+            for _ in range (it):
+                if ( p == 8):
+                    p = 0
+                for i in range(img_aminc.shape[0]-1):
+                    for j in range(img_aminc.shape[1]-1):
+                        bool = False
+                        print(l[p].shape[0])
+                        for t in range(-1, l[p].shape[0]-1):
+                            for k in range(-1, l[p].shape[1]-1):
+                                if l[p][t,k] == None or img_aminc[i+t, j+k] == l[p][t,k]:
+                                    bool = True
+                                else:
+                                    bool = False
+                                    break
+                        if bool :
+                            img_aminc[i,j] = 0
+                        else:
+                            break
+                p += 1
+
+            img = Image.fromarray(img_aminc)
+            qimg = ImageQt.ImageQt(img)
+            self.ui.label.setGeometry(30,30,img_aminc.shape[1], img_aminc.shape[0])
             self.ui.label.setPixmap(QPixmap(qimg))
             self.ui.label.setScaledContents(True)
 

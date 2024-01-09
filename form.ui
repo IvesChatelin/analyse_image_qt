@@ -125,7 +125,7 @@
               <item>
                <widget class="QPushButton" name="btn_amin_homtho">
                 <property name="text">
-                 <string>Amincissement homothopique</string>
+                 <string>Amincissement homotopique</string>
                 </property>
                </widget>
               </item>
